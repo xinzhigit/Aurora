@@ -90,7 +90,7 @@ Material:
     - _Cloud3Amount: 1.09
     - _CloudBias: -0.27
     - _CloudDensity: 1.72
-    - _CloudHeight: 1851
+    - _CloudHeight: 2000
     - _CloudHeightAdjust: -0.1
     - _CloudHeightContrast: 0.1
     - _CloudScale: 1.32
@@ -115,7 +115,7 @@ Material:
     - _SpecularHighlights: 1
     - _Speed: -0.01
     - _SrcBlend: 1
-    - _Steps: 1
+    - _Steps: 21
     - _UVSec: 0
     - _WaveAmount: 0.39
     - _WaveDistort: -0.7
