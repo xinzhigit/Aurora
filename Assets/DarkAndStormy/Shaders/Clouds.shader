@@ -195,23 +195,24 @@
 				// Figure out how for to move through the uvs for each step of the parallax offset
 				half3 uvStep = half3( traceDir.xz * _BumpOffset * ( 1.0 / traceDir.y), 1.0 ) * ( 1.0 / _Steps );
 				uv += uvStep * rand3( IN.worldPos + _SinTime.w );
+				//uv += uvStep * ( IN.worldPos + _SinTime.w );
 
 				// initialize the accumulated color with fog
 				half4 accColor = FogColorDensitySky(viewDir);
 				half4 clouds = 0;
-				[loop]for( int j = 0; j < _Steps; j++ ){
-					// if we filled the alpha then break out of the loop
-					if( accColor.w >= 1.0 ) { break; }
+				//[loop]for( int j = 0; j < _Steps; j++ ){
+				//	// if we filled the alpha then break out of the loop
+				//	if( accColor.w >= 1.0 ) { break; }
 
-					// add the step offset to the uv
-					uv += uvStep;
+				//	// add the step offset to the uv
+				//	uv += uvStep;
 
-					// sample the clouds at the current position
-					clouds = SampleClouds(uv, lightTransTotal, 0.0 );
+				//	// sample the clouds at the current position
+				//	clouds = SampleClouds(uv, lightTransTotal, 0.0 );
 
-					// add the current cloud color with front to back blending
-					accColor += clouds * ( 1.0 - accColor.w );
-				}
+				//	// add the current cloud color with front to back blending
+				//	accColor += clouds * ( 1.0 - accColor.w );
+				//}
 
 				// one last sample to fill gaps
 				uv += uvStep;
@@ -219,6 +220,8 @@
 				accColor += clouds * ( 1.0 - accColor.w );
 
 				// return the color!
+				//accColor = float4(uv, 1);
+
 				return accColor;
 			}
 			ENDCG

@@ -3,6 +3,8 @@
 	Properties
 	{
 		_Cube ("Environment Map (RGB)", CUBE) = "" {}
+		_Rotation ("Rotation", Vector) = (0, 0, 0, 0)
+		_RotationSpeed("Rotation Speed", float) = 1
 
 		[NoScaleOffset] _CloudTex1 ("Clouds 1", 2D) = "white" {}
 		_Tiling1("Tiling 1", Vector) = (1,1,0,0)
@@ -50,6 +52,8 @@
 			#include "FogInclude.cginc"
 
 			samplerCUBE _Cube;   
+			float4 _Rotation;
+			float _RotationSpeed;
 
 			sampler2D _CloudTex1;
 			sampler2D _WaveTex;
@@ -93,12 +97,26 @@
 			float rand3( float3 co ){
 			    return frac( sin( dot( co.xyz ,float3(17.2486,32.76149, 368.71564) ) ) * 32168.47512);
 			}
+
+			float4x4 Rotate(float4 rotation) {
+                float4 rad = radians(rotation);
+                float4 sinRad,cosRad;
+				sincos(rad, sinRad, cosRad);
+
+                float4x4 mat = float4x4(cosRad.y * cosRad.z, -cosRad.y * sinRad.z, sinRad.y, 0,
+                                        cosRad.x * sinRad.z + sinRad.x * sinRad.y * cosRad.z, cosRad.x * cosRad.z - sinRad.x * sinRad.y * sinRad.z, -sinRad.x * cosRad.y, 0,
+                                        sinRad.x * sinRad.z - cosRad.x * sinRad.y * cosRad.z, sinRad.x * cosRad.z + cosRad.x * sinRad.y * sinRad.z, (cosRad.x * cosRad.y), 0,
+                                        0, 0, 0, 1);
+
+                return mat;
+            }
 			
 			v2f vert (appdata_full v)
 			{
 				v2f o;
 				o.vertex = UnityObjectToClipPos(v.vertex);
-				o.texcoord = v.texcoord;
+				float4x4 rotMat = Rotate(_Rotation * _RotationSpeed * _Time.y);
+				o.texcoord = mul(rotMat, v.texcoord);
 				o.worldPos = mul( unity_ObjectToWorld, v.vertex ).xyz;
 				return o;
 			}
@@ -118,14 +136,14 @@
 
 				// Generate uvs from the world position of the sky
 				float3 worldPos = _WorldSpaceCameraPos + traceDir * ( ( _CloudHeight - _WorldSpaceCameraPos.y ) / max( traceDir.y, 0.00001) );
-				float3 uv = float3( worldPos.xzy * 0.01 * _Scale);
+				float3 uv = float3( worldPos.xz * 0.01 * _Scale, 1);
 
 				// Figure out how for to move through the uvs for each step of the parallax offset
-				half3 uvStep = half3( traceDir.xzy * _BumpOffset * ( 1.0 / traceDir.y)) * ( 1.0 / _Steps );
+				//half3 uvStep = half3( traceDir.xz * _BumpOffset * ( 1.0 / traceDir.y), 1) * ( 1.0 / _Steps );
 				//uv += uvStep * rand3( IN.worldPos + _SinTime.w );
-				uv += uvStep * ( IN.worldPos + _SinTime.w );
+				//uv += uvStep * ( IN.worldPos + _SinTime.w );
 
-				float4 accColor = 0;
+				float4 accColor = FogColorDensitySky(viewDir);
 				float speed = _Speed * _Time.x;
 
 				// wave distortion
@@ -146,7 +164,7 @@
 
 				// overhead light color
 				float3 coords4 = float3( uv.xy * _TilingColor.xy + ( _TilingColor.zw * speed ), 0.0 );
-				half4 cloudColor = tex2Dlod( _ColorTex, float4(coords4.xy,0,0)  );
+				half4 cloudColor = tex2D( _ColorTex, float4(coords4.xy,0,0)  );
 
 				// cloud color based on density
 				half cloudHightMask = 1.0 - saturate( clouds.w );
@@ -181,6 +199,14 @@
 				//accColor = float4(coords1, 0, 1);
 				//accColor = clouds2;
 				//accColor = environment;
+				//accColor = cloudColor;
+				//accColor = float4(viewDir, 1);
+				//accColor = viewFalloff;
+				//accColor = float4(traceDir, 1);
+				//accColor = float4(worldPos, 1);
+				//accColor = float4(worldPos.xz, 1, 1);
+				//accColor = float4(IN.worldPos, 1);
+				//accColor = float4(IN.texcoord, 1);
 
 				return accColor;
 			}
